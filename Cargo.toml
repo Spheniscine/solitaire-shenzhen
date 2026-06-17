@@ -9,6 +9,8 @@ edition = "2021"
 [dependencies]
 dioxus = { version = "0.6.0", features = [] }
 enum-map = "2.7.3"
+glam = "0.33.1"
+phf = { version = "0.13.1", features = ["macros"] }
 serde = { version = "1.0.228", features = ["derive"] }
 strum = "0.28.0"
 strum_macros = "0.28.0"
