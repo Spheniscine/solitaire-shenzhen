@@ -15,7 +15,6 @@ const MAHJONG_FONT: Asset = asset!("/assets/Mahjong.woff2");
 const CONFETTI_JS: Asset = asset!("/assets/confetti.min.js");
 
 const MAIN_CSS: Asset = asset!("/assets/main.css");
-const HEADER_SVG: Asset = asset!("/assets/header.svg");
 
 fn main() {
     dioxus::launch(App);
