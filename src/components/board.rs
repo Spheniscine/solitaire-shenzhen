@@ -153,7 +153,7 @@ pub fn BoardComponent(
                         position: get_pos(depot, i),
                         width: card_width,
                         card: if is_face_up(depot) {board.depots[depot][i]},
-                        number_hint: if !is_face_up(depot) {i + 1},
+                        // number_hint: if !is_face_up(depot) {i + 1},
                         skin,
                         onclick: move |_| {
                             onclick.call(BoardPos::new(depot, i))

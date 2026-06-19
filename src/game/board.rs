@@ -32,7 +32,7 @@ impl DepotRole {
         match self {
             DepotRole::FreeCell => NUM_SUITS,
             DepotRole::HonorFoundation => NUM_SUITS,
-            DepotRole::FlowerFoundation => NUM_FLOWERS,
+            DepotRole::FlowerFoundation => 1,
             DepotRole::NumberFoundation => NUM_SUITS,
             DepotRole::Tableau => 8,
         }
