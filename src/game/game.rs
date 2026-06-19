@@ -1,10 +1,11 @@
 use std::time::Duration;
 
+use enum_map::EnumMap;
 use rand::{Rng, seq::SliceRandom};
 use serde::{Deserialize, Serialize};
-use strum::IntoEnumIterator;
+use strum::{EnumCount, IntoEnumIterator};
 
-use crate::game::{Board, BoardPos, Card, DECK_SIZE, DepotRole, HONOR_COPIES, NUM_RANKS, RANKS, Skin, Suit};
+use crate::{components::LocalStorage, game::{Board, BoardPos, Card, DECK_SIZE, DepotRole, HONOR_COPIES, NUM_RANKS, RANKS, Skin, Suit}};
 
 pub const ANIMATION_DURATION: Duration = Duration::from_millis(200);
 pub type AnimationKey = u16;
@@ -157,7 +158,7 @@ impl GameState {
             }
 
             let dest = BoardPos::new(pos.depot_index, pos.card_index.wrapping_add(1));
-            self.move_intent(src, dest);
+            self.move_intent(src, dest, false);
         } else {
             if self.can_select(pos) {
                 self.board.selected = Some(pos);
@@ -201,7 +202,7 @@ impl GameState {
         true
     }
 
-    fn move_intent(&mut self, pos1: BoardPos, pos2: BoardPos) -> bool {
+    fn move_intent(&mut self, pos1: BoardPos, pos2: BoardPos, auto: bool) -> bool {
         if pos1.depot_index == pos2.depot_index { return false; }
         let depot1 = &self.board.depots[pos1.depot_index];
         let depot2 = &self.board.depots[pos2.depot_index];
@@ -245,7 +246,7 @@ impl GameState {
             },
         }
 
-        self.undo_stack.push(history_len);
+        if !auto { self.undo_stack.push(history_len); }
         true
     }
 
@@ -261,7 +262,7 @@ impl GameState {
         let card = depot[pos.card_index];
         match card {
             Card::Number { .. } => {
-                if NumberFoundation.range().any(|d| self.move_intent(pos, self.board.top_pos(d))) {
+                if NumberFoundation.range().any(|d| self.move_intent(pos, self.board.top_pos(d), false)) {
                     return;
                 }
             },
@@ -269,17 +270,92 @@ impl GameState {
                 if self.honor_sort(suit, None) { return; }
             },
             Card::Flower => {
-                if self.move_intent(pos, self.board.top_pos(FlowerFoundation.id(0))) { return; }
+                if self.move_intent(pos, self.board.top_pos(FlowerFoundation.id(0)), false) { return; }
             },
         }
 
         for dest in FreeCell.range() {
-            if self.move_intent(pos, self.board.top_pos(dest)) { return; }
+            if self.move_intent(pos, self.board.top_pos(dest), false) { return; }
         }
     }
 
     pub fn undo_possible(&self) -> bool {
         self.allow_undo && !self.history.is_empty()
+    }
+
+    pub fn undo(&mut self) {
+        if self.is_busy() || !self.undo_possible() { return; }
+        let Some(target_len) = self.undo_stack.pop() else {return};
+        while self.history.len() > target_len {
+            let rec = self.history.pop().unwrap();
+            self.board.do_move(rec.pos2, rec.pos1);
+            self.board.advance_actions(); // no animation, as repeated card moves on same card causes problems
+        }
+        LocalStorage.save_game_state(&self);
+    }
+
+    pub fn restart(&mut self) {
+        if self.history.is_empty() || !self.undo_possible() { return; }
+        self.board = Board::from_deal(&self.deal);
+        self.history.clear();
+        self.undo_stack.clear();
+        LocalStorage.save_game_state(&self);
+    }
+
+    /// returns an EnumMap where each suit gives the rank that is safe to sort
+    pub fn get_safe_sorts(&self) -> EnumMap<Suit, u8> {
+        // first get the ranks of the cards that are already sorted
+        let mut foundation_ranks = EnumMap::<Suit, u8>::default();
+        for i in DepotRole::NumberFoundation.range() {
+            if let Some(card) = self.board.depots[i].last() {
+                let Card::Number { suit, rank } = *card else {continue};
+                foundation_ranks[suit] = rank;
+            }
+        }
+
+        // then going from the suit with the lowest ranks sorted to highest, check if the cards that may be placed on
+        // the candidate are either already sorted, or would be safe to sort once uncovered
+        let mut ite = Suit::iter();
+        let mut order: [Suit; Suit::COUNT] = std::array::from_fn(|_| ite.next().unwrap());
+        order.sort_by_key(|&s| foundation_ranks[s]);
+        for s in order {
+            let ans = foundation_ranks.iter().all(|(_, &rank)| {
+                rank >= foundation_ranks[s]
+            });
+            if ans { foundation_ranks[s] += 1; }
+        }
+        foundation_ranks
+    }
+
+    pub fn check_auto_moves(&mut self) {
+        if self.is_busy() { return; }
+        if !self.auto_play { return; }
+
+        let safe_sorts = self.get_safe_sorts();
+        let depots = [
+            DepotRole::FreeCell,
+            DepotRole::Tableau
+        ].iter().flat_map(|r| r.range());
+
+        for depot in depots {
+            let Some(&card) = self.board.depots[depot].last() else {continue};
+            match card {
+                Card::Number { rank, suit } => {
+                    if safe_sorts[suit] != rank { continue; }
+                    let src = self.board.last_pos(depot);
+                    for dest in DepotRole::NumberFoundation.range() {
+                        if self.move_intent(src, self.board.top_pos(dest), true) {
+                            return;
+                        }
+                    }
+                },
+                Card::Flower => {
+                    self.do_move_raw(self.board.last_pos(depot), self.board.top_pos(DepotRole::FlowerFoundation.id(0)));
+                    return;
+                },
+                _ => {},
+            }
+        }
     }
 
     pub fn advance_animations(&mut self, key: AnimationKey) {
@@ -294,9 +370,9 @@ impl GameState {
                 self.already_won = true;
             }
         } else {
-            // self.check_auto_moves();
+            self.check_auto_moves();
         }
 
-        // if !self.is_busy() { LocalStorage.save_game_state(&self); }
+        if !self.is_busy() { LocalStorage.save_game_state(&self); }
     }
 }
