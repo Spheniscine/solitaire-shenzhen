@@ -5,7 +5,7 @@ use serde_tuple::{Deserialize_tuple, Serialize_tuple};
 use strum::{IntoEnumIterator, VariantArray};
 use strum_macros::{EnumIter, VariantArray};
 
-use crate::game::{Card, DECK_SIZE, NUM_FLOWERS, NUM_SUITS};
+use crate::game::{Card, DECK_SIZE, NUM_SUITS};
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, EnumIter, VariantArray)]
 #[repr(u8)]
@@ -107,7 +107,7 @@ impl Board {
         }
     }
 
-    pub fn from_deal(mut deal: &[Card]) -> Self {
+    pub fn from_deal(deal: &[Card]) -> Self {
         use DepotRole::*;
         assert_eq!(deal.len(), DECK_SIZE);
 
