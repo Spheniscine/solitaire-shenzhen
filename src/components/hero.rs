@@ -47,7 +47,7 @@ pub fn Hero() -> Element {
                     top: rem(1.5),
                     left: rem(2.),
                     class: "game-button",
-                    // onclick: move |_| if clean {state.write().new_game()},
+                    onclick: move |_| if clean {state.write().new_game()},
                     "New Game"
                 }
 
@@ -106,7 +106,7 @@ pub fn Hero() -> Element {
                     board: st.board.clone(),
                     skin: st.skin,
                     onclick: move |pos| if clean {state.write().onclick(pos);},
-                    // ondoubleclick: move |pos| if clean {state.write().ondoubleclick(pos);},
+                    ondoubleclick: move |pos| if clean {state.write().ondoubleclick(pos);},
                     animation_key: st.animation_key,
                     is_won: st.is_won(),
                 }

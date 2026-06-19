@@ -249,6 +249,35 @@ impl GameState {
         true
     }
 
+    pub fn ondoubleclick(&mut self, pos: BoardPos) {
+        use DepotRole::*;
+        if self.is_busy() { return; }
+        if !self.can_select(pos) { return; } // needed, or illegal stacks can still be moved this way!
+
+        let depot = &self.board.depots[pos.depot_index];
+        let num_moved = depot.len() - pos.card_index;
+        if num_moved != 1 { return; }
+
+        let card = depot[pos.card_index];
+        match card {
+            Card::Number { .. } => {
+                if NumberFoundation.range().any(|d| self.move_intent(pos, self.board.top_pos(d))) {
+                    return;
+                }
+            },
+            Card::Honor { suit } => {
+                if self.honor_sort(suit, None) { return; }
+            },
+            Card::Flower => {
+                if self.move_intent(pos, self.board.top_pos(FlowerFoundation.id(0))) { return; }
+            },
+        }
+
+        for dest in FreeCell.range() {
+            if self.move_intent(pos, self.board.top_pos(dest)) { return; }
+        }
+    }
+
     pub fn undo_possible(&self) -> bool {
         self.allow_undo && !self.history.is_empty()
     }
