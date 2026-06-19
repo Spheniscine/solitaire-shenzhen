@@ -100,7 +100,7 @@ pub fn Help(mut game_state: Signal<GameState>) -> Element {
 
                 p {
                     Emph{"Honor"}, " cards do not stack on other cards. The ", Emph{"honor slots"}, " at the top-left also act as ",
-                    Emph{"free cells"}, " that may each store one card of any kind. When all 4 copies of a type of honor card are exposed, 
+                    Emph{"free cells"}, " that may each store one card of any kind. When all 4 copies of a kind of honor card are exposed, 
                     you may put them away by either moving two of them to the same honor slot, or double-clicking one of them. 
                     They will then permanently occupy an honor slot."
                 }
