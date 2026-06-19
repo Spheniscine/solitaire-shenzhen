@@ -14,7 +14,9 @@ const MAHJONG_FONT: Asset = asset!("/assets/Mahjong.woff2");
 // from https://www.confettijs.org/
 const CONFETTI_JS: Asset = asset!("/assets/confetti.min.js");
 
-const MAIN_CSS: Asset = asset!("/assets/main.css");
+// string inclusion is used to prevent FOUC;
+// const _RAND_RECOMPILE: u64 = 0x4a2a5cf9126cd711; // comment and uncomment to force recompilation
+const MAIN_CSS: &str = const_css_minify::minify!("../assets/main.css");
 
 fn main() {
     dioxus::launch(App);
@@ -38,7 +40,7 @@ fn App() -> Element {
         }
 
         document::Link { rel: "icon", href: FAVICON }
-        document::Link { rel: "stylesheet", href: MAIN_CSS }
+        document::Style {{MAIN_CSS}}
 
         document::Style {
             r#"
