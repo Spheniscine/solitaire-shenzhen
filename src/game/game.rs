@@ -85,7 +85,7 @@ impl GameState {
         self.history.clear();
         self.undo_stack.clear();
         self.already_won = false;
-        // LocalStorage.save_game_state(&self);
+        LocalStorage.save_game_state(&self);
     }
 
     pub fn is_busy(&self) -> bool {
