@@ -70,7 +70,12 @@ pub fn Help(mut game_state: Signal<GameState>) -> Element {
                             span {
                                 font_family: KATEX_MAIN,
                                 font_size: "1.2em",
-                                "1~9"
+                                "1"
+                            }, "~", 
+                            span {
+                                font_family: KATEX_MAIN,
+                                font_size: "1.2em",
+                                "9"
                             }, ", in each of 3 suits."
                         },
 
