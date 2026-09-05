@@ -37,7 +37,7 @@ pub fn Help(mut game_state: Signal<GameState>) -> Element {
         rsx! {
             {ite.next().unwrap()},
             for x in ite { "–", {x} },
-            " can be placed on the ", {last}
+            " can be placed on ", {last}
         }
     };
 
@@ -94,9 +94,9 @@ pub fn Help(mut game_state: Signal<GameState>) -> Element {
                 }
 
                 p {
-                    Emph{"Number"}, " cards stack in the ", Emph{"tableau"}, " by ", Emph {"descending rank"}, " and " Emph {"unlike suit"},
+                    Emph{"Number"}, " cards stack in the ", Emph{"tableau"}, " by ", Emph {"decrementing rank"}, " and " Emph {"unlike suit"},
                     ". Such stacks of any size can be moved as a unit. (e.g. ",{stack_example()},"). They are put away to the ",
-                    Emph{"number slots"}, " at the top-right, in ascending order by suit."
+                    Emph{"number slots"}, " at the top-right, in incrementing order by suit."
                 }
 
                 p {
